@@ -1,14 +1,12 @@
 %%%% Integral Method Kuramoto-Sivashinsky Parameter Estimation %%%%
 
 %% PSEUDO-CODE
-
 %{
 
 INPUTS 
 ------
 filename : string for path to -v7.3 .mat file containing data
 N_d : number of integration domains
-N_h : max number of harmonics of integration function, A, to sample
 D = [fr, Dt] : size of integration domain
 
 OUTPUTS
@@ -19,7 +17,6 @@ res : residual of estimation (utility unclear)
 
 Initialize
     -size of local domain
-    -how many harmonics to sample
     -any tracking variables
     -library and target
 
@@ -36,17 +33,17 @@ Regression
 Reminders
     -disp to-do list
 
-deriveA(L,M,N)
-    -inputs: derivative orders
+weight_full(k)
+    -inputs: k = [kx,ky,kt], order of derivative(s)
     -output: 3D array corresponding to local sub-domain
 
-h(x,k,q)
-    -inputs: absiscae, derivative order, harmonic of sinusoid
+weight_poly(x,m,k)
+    -inputs: absiscae, polynomial order, derivative order
     -output: additive windowing polynomial
 
 %}
 %%
-function [ksi,res,Q,q0] = ParEst_wf_KS(filename,N_d,N_h,D,if_track,if_symreg)
+function [ksi,res,Q,q0] = ParEst_wf_KS(filename,N_d,D,if_track,if_symreg)
 
 %% INITIALIZE
 % Define matfile
@@ -86,85 +83,78 @@ Q = zeros(length(q0),8);
 
 n_lib = 0;
 n_track = 10;
-for q = 1:N_h(1)
-    for r = 1:N_h(2)
             
-        % Make wave numbers global to be use in deriveA()
-        var.q = q;
-        var.r = r;
-            
-        % Pre-make derivatives of windowing functions
-        dA00 = weight_full([0,0]);
-        dA01 = weight_full([0,1]);
-        dA10 = weight_full([1,0]);
-        dA20 = weight_full([2,0]);
-        dA40 = weight_full([4,0]);
-        dA30 = weight_full([3,0]);
-        
-        for np = 1:N_d  
+% Pre-make derivatives of windowing functions
+dA00 = weight_full([0,0]);
+dA01 = weight_full([0,1]);
+dA10 = weight_full([1,0]);
+dA20 = weight_full([2,0]);
+dA40 = weight_full([4,0]);
+dA30 = weight_full([3,0]);
 
-        n_lib = n_lib + 1;
+for np = 1:N_d  
 
-        if if_track && n_lib == n_track
-            if n_lib < 100
-                disp(['Library Row # : ',num2str(n_lib)])
-                n_track = n_track + 10;
-            elseif n_lib < 1000
-                disp(['Library Row # : ',num2str(n_lib)])
-                n_track = n_track + 100;
-            else
-                disp(['Library Row # : ',num2str(n_lib)])
-                n_track = n_track + 1000;
-            end
+    n_lib = n_lib + 1;
+
+    if if_track && n_lib == n_track
+        if n_lib < 100
+            disp(['Library Row # : ',num2str(n_lib)])
+            n_track = n_track + 10;
+        elseif n_lib < 1000
+            disp(['Library Row # : ',num2str(n_lib)])
+            n_track = n_track + 100;
+        else
+            disp(['Library Row # : ',num2str(n_lib)])
+            n_track = n_track + 1000;
         end
-
-        % Indices for integration domain
-        rx = P(1,np):(P(1,np)+var.Dx);
-        rt = P(2,np):(P(2,np)+var.Dt);
-
-        % Velocity fields on integration domain
-        U = traj.uu(rx,rt); 
-
-        % Target
-        B = U.*dA01*S_t; 
-        q0(n_lib,1) = trapz(var.x,trapz(var.t,B,2),1);
-        
-        % Advection Term 
-        th1 = -(1/2)*U.^2.*dA10*S_x; 
-        Q(n_lib,1) = trapz(var.x,trapz(var.t,th1,2),1);
-
-        % Laplacian Term
-        th2 = U.*dA20*S_x^2;
-        Q(n_lib,2) = trapz(var.x,trapz(var.t,th2,2),1);
-
-        % Biharmonic Term
-        th3 = U.*dA40*S_x^4; 
-        Q(n_lib,3) = trapz(var.x,trapz(var.t,th3,2),1);
-        
-        % Linear Term
-        th4 = U.*dA00;
-        Q(n_lib,4) = trapz(var.x,trapz(var.t,th4,2),1);
-        
-        % First Order Derivative
-        th5 = U.*dA10*S_x;
-        Q(n_lib,5) = trapz(var.x,trapz(var.t,th5,2),1);
-        
-        % Third Order Derivative
-        th6 = U.*dA30*S_x^3;
-        Q(n_lib,6) = trapz(var.x,trapz(var.t,th6,2),1);
-        
-        % Quadratic Term
-        th7 = U.^2.*dA00;
-        Q(n_lib,7) = trapz(var.x,trapz(var.t,th7,2),1);
-        
-        % Cubic Term
-        th8 = U.^3.*dA00;
-        Q(n_lib,8) = trapz(var.x,trapz(var.t,th8,2),1);
-
-        end
-            
     end
+
+    % Indices for integration domain
+    rx = P(1,np):(P(1,np)+var.Dx);
+    rt = P(2,np):(P(2,np)+var.Dt);
+
+    % Velocity fields on integration domain
+    U = traj.uu(rx,rt); 
+
+    % Target
+    B = U.*dA01*S_t; 
+    q0(n_lib,1) = trapz(var.x,trapz(var.t,B,2),1);
+
+    % Advection Term 
+    th1 = -(1/2)*U.^2.*dA10*S_x; 
+    Q(n_lib,1) = trapz(var.x,trapz(var.t,th1,2),1);
+
+    % Laplacian Term
+    th2 = U.*dA20*S_x^2;
+    Q(n_lib,2) = trapz(var.x,trapz(var.t,th2,2),1);
+
+    % Biharmonic Term
+    th3 = U.*dA40*S_x^4; 
+    Q(n_lib,3) = trapz(var.x,trapz(var.t,th3,2),1);
+
+    % Linear Term
+    th4 = U.*dA00;
+    Q(n_lib,4) = trapz(var.x,trapz(var.t,th4,2),1);
+
+    % First Order Derivative
+    th5 = U.*dA10*S_x;
+    Q(n_lib,5) = trapz(var.x,trapz(var.t,th5,2),1);
+
+    % Third Order Derivative
+    th6 = U.*dA30*S_x^3;
+    Q(n_lib,6) = trapz(var.x,trapz(var.t,th6,2),1);
+
+    % Quadratic Term
+    th7 = U.^2.*dA00;
+    Q(n_lib,7) = trapz(var.x,trapz(var.t,th7,2),1);
+
+    % Cubic Term
+    th8 = U.^3.*dA00;
+    Q(n_lib,8) = trapz(var.x,trapz(var.t,th8,2),1);
+
 end
+            
+
 
 %% REGRESSION
 % Parameters
