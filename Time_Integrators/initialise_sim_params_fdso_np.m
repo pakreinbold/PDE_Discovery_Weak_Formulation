@@ -1,5 +1,5 @@
 function initialise_sim_params_fdso_np(I_mks,dt_mks,n,monopole_sense)
-%% The code was written by Balachandra Suri
+%% The code was originally written by Balachandra Suri
 %{
 
 INPUT:
@@ -16,15 +16,27 @@ Directory containing necessary files for integrator to function properly
 To recreate PNAS data set:
 I_mks           = 19.5/1000
 dt_mks          = 1/32
-n               = 20 (and then sub-sampled to 10 post creation)
+n               = 40 (and then sub-sampled to 10 post creation)
 monopole_sense  = 'ccw'
+
+NOTE: Using n = 20 subsampled down to n = 10 should yield comparable
+results as the n = 40 sub-sampled used in PNAS paper. Use n = 20 for faster
+results.
 
 %}
 %%
 disp('Initialising Simulation Parameters')
 
-load('forcing_profile_20.mat','F0x')
+% Load forcing profile
+if n == 20
+    load('forcing_profile_20.mat','F0x')
+elseif n == 40
+    load('forcing_profile_40.mat','F0x')
+else
+    error(['No forcing profile for the grid spacing n = ',num2str(n)])
+end
 
+% Create directory for desired forcing current
 dir_name = sprintf('%05.2fmA',I_mks*1000);
 if (~exist(dir_name,'dir'))
 mkdir(dir_name);
