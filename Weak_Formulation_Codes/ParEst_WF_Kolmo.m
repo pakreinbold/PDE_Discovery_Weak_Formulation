@@ -12,8 +12,8 @@ filename        : string for path to -v7.3 .mat file containing data
     - Ts_mks    : time-scale in seconds
 N_d             : number of integration domains
 N_h = [Q R S] 
-    - S         : max # harmonics in time (>=1)
-    - Q,R       : max # harmonics in x,y resp. (>=0)
+    - S         : max harmonic in time (>=1)
+    - Q,R       : max harmonic in x,y resp. (>=0)
 D = [fr, Dt] 
     - fr        : spatial-area of int domain as fraction of full area
     - Dt        : time-length of integration domain in grid points
@@ -73,14 +73,11 @@ function [ksi,res,Q,q0,P] = ParEst_WF_Kolmo(filename,N_d,N_h,D,track)
 % Define matfile
 traj = matfile(filename);
 
-% Load time-scale
-Ts_mks = traj.Ts_mks;
-
 % Get size of velocity fields
 [Ly,Lx,Lt] = size(traj,'U_t');
 
 % Grid densities
-dt_mks = traj.dt_mks;
+dt = traj.dt;
 dx = traj.dx; 
 
 % Size of local domain
@@ -100,7 +97,7 @@ P(3,:) = randi([1,Lt-var.Dt],N_d,1);
 % Define derivative conversions
 S_x = 2/(dx*var.Dx);
 S_y = 2/(dx*var.Dy);
-S_t = (2*Ts_mks)/(dt_mks*var.Dt);
+S_t = 2/(dt*var.Dt);
 
 % Create subdomain
 var.x = linspace(-1,1,var.Dx); 

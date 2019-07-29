@@ -298,8 +298,10 @@ end
 U0 = (Ue(2:end,:)+Ue(1:end-1,:))/2*Us_mks;
 V0 = (Ve(:,2:end)+Ve(:,1:end-1))/2*Us_mks;
 
+dt = save_rate/Ts_mks;      % time-step between saved snapshot (non-dim)
+dt_int_mks = dt_mks;        % integration time-step (seconds)
 file_name = sprintf('state_%05.2fmA_%.4d.mat',I_mks*1000,tf_mks);
-save(file_name,'-v7.3','omega','U','V','P','U0','V0','Us_mks','Ts_mks','Ls_mks','dt_mks','tf_mks','ti_mks',...
+save(file_name,'-v7.3','omega','U','V','P','U0','V0','Us_mks','Ts_mks','Ls_mks','dx','dt','dt_int_mks','tf_mks','ti_mks',...
     'I_mks','rms_u','rms_v','gamma_arr','x','y','nltU_prev','nltV_prev','omega','err_u','err_v','F0x');
 if(save_for_rec)
     save(file_name,'U_t','V_t','P_t','omega_save_dn','advpf','Re_nu','Re_rf','-append');

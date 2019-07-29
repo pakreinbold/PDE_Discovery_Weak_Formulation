@@ -6,13 +6,13 @@
 %   AK Kassam and LN Trefethen, July 2002
 
 % Spatial grid and initial condition:
-N = 128;
+N = 128*8;
 x = 32*pi*(1:N)'/N;
 u = cos(x/16).*(1+sin(x/16));
 v = fft(u);
 
 % Precompute various ETDRK4 scalar quantities:
-h = 1/4;                         % time step
+h = 2/10;                         % time step
 k = [0:N/2-1 0 -N/2+1:-1]'/16;   % wave numbers
 L = k.^2 - k.^4;                 % Fourier multipliers
 E = exp(h*L); E2 = exp(h*L/2);
@@ -26,9 +26,9 @@ f3 = h*real(mean(  (-4-3*LR-LR.^2+exp(LR).*(4-LR))./LR.^3  ,2));
 
 % Main time-stepping loop:
 uu=u; tt=0;
-tmax = 250; 
-nmax = round(tmax/h); 
-nplt = floor((tmax/100)/h);
+tmax = 100;                     % Lt, total integration time 
+nmax = round(tmax/h);           % number of integration time steps
+nplt = (tmax/250)/h;            % snapshot time step
 g = -0.5i*k;
 for n = 1:nmax
     t = n*h;
@@ -46,6 +46,11 @@ for n = 1:nmax
         tt = [tt,t];
     end
 end
+
+% Save Results
+dx = x(2) - x(1);
+dt = tt(2) - tt(1);
+save('Kuramoto_Sivashinsky.mat','tt','uu','dx','dt','-v7.3')
 
 % Plot results:
 surf(tt,x,uu), shading interp, lighting phong, axis tight

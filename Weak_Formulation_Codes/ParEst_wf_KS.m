@@ -76,7 +76,7 @@ P(1,:) = randi([1,Lx-var.Dx],N_d,1);
 P(2,:) = randi([1,Lt-var.Dt],N_d,1);
 
 % Initialize Target and Library
-q0 = zeros(N_d*N_h(1)*N_h(2),1);
+q0 = zeros(N_d,1);
 Q = zeros(length(q0),8);
 
 %% FILL TERMS
@@ -159,13 +159,12 @@ end
 %% REGRESSION
 % Parameters
 if if_symreg
-    ksi = SINDy(Q, q0); % sparsify library
+    ksi = SINDy(Q, q0);     % sparsify library
+    res = norm(q0 - Q*ksi);
 else
     ksi = Q(:,1:3) \ q0;
+    res = norm(q0 - Q(1:3)*ksi);
 end
-
-% How good was the estimation
-res = norm(q0 - Q*ksi);
 
 %% REMINDERS
 
@@ -215,7 +214,7 @@ k = [kx,ky,kt]: order of derivative(s)
 %}
 
 wx = weight_poly(var.x,4,k(1));
-wt = weight_poly(var.t,1,k(2));
+wt = weight_poly(var.t,3,k(2));
 
 [wT,wX] = meshgrid(wt,wx);
 
