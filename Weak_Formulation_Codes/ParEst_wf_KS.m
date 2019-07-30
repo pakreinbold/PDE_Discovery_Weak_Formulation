@@ -58,39 +58,38 @@ dx = traj.dx;
 
 % % Size of local domain
 clearvars -global
-global var
-var.Dx = D(1);
-var.Dt = D(2);
+Dx = D(1);
+Dt = D(2);
 
 % Create subdomain
-var.x = linspace(-1,1,var.Dx+1); 
-var.t = linspace(-1,1,var.Dt+1);
+x = linspace(-1,1,Dx+1); 
+t = linspace(-1,1,Dt+1);
 
 % Define variable conversions
-S_x = 2/(dx*var.Dx);
-S_t = 2/(dt*var.Dt);
+S_x = 2/(dx*Dx);
+S_t = 2/(dt*Dt);
 
 % Time sampling scheme
 P = zeros(2,N_d);
-P(1,:) = randi([1,Lx-var.Dx],N_d,1);
-P(2,:) = randi([1,Lt-var.Dt],N_d,1);
+P(1,:) = randi([1,Lx-Dx],N_d,1);
+P(2,:) = randi([1,Lt-Dt],N_d,1);
 
 % Initialize Target and Library
 q0 = zeros(N_d,1);
 Q = zeros(length(q0),8);
 
-%% FILL TERMS
-
+%% FILL LIBRARY AND TARGET
 n_lib = 0;
 n_track = 10;
             
 % Pre-make derivatives of windowing functions
-dA00 = weight_full([0,0]);
-dA01 = weight_full([0,1]);
-dA10 = weight_full([1,0]);
-dA20 = weight_full([2,0]);
-dA40 = weight_full([4,0]);
-dA30 = weight_full([3,0]);
+p = [4,3];                          % weight function exponents
+dA00 = weight_full([0,0],p,x,t);
+dA01 = weight_full([0,1],p,x,t);
+dA10 = weight_full([1,0],p,x,t);
+dA20 = weight_full([2,0],p,x,t);
+dA40 = weight_full([4,0],p,x,t);
+dA30 = weight_full([3,0],p,x,t);
 
 for np = 1:N_d  
 
@@ -110,52 +109,50 @@ for np = 1:N_d
     end
 
     % Indices for integration domain
-    rx = P(1,np):(P(1,np)+var.Dx);
-    rt = P(2,np):(P(2,np)+var.Dt);
+    rx = P(1,np):(P(1,np)+Dx);
+    rt = P(2,np):(P(2,np)+Dt);
 
     % Velocity fields on integration domain
     U = traj.uu(rx,rt); 
 
     % Target
     B = U.*dA01*S_t; 
-    q0(n_lib,1) = trapz(var.x,trapz(var.t,B,2),1);
+    q0(n_lib,1) = trapz(x,trapz(t,B,2),1);
 
     % Advection Term 
     th1 = -(1/2)*U.^2.*dA10*S_x; 
-    Q(n_lib,1) = trapz(var.x,trapz(var.t,th1,2),1);
+    Q(n_lib,1) = trapz(x,trapz(t,th1,2),1);
 
     % Laplacian Term
     th2 = U.*dA20*S_x^2;
-    Q(n_lib,2) = trapz(var.x,trapz(var.t,th2,2),1);
+    Q(n_lib,2) = trapz(x,trapz(t,th2,2),1);
 
     % Biharmonic Term
     th3 = U.*dA40*S_x^4; 
-    Q(n_lib,3) = trapz(var.x,trapz(var.t,th3,2),1);
+    Q(n_lib,3) = trapz(x,trapz(t,th3,2),1);
 
     % Linear Term
     th4 = U.*dA00;
-    Q(n_lib,4) = trapz(var.x,trapz(var.t,th4,2),1);
+    Q(n_lib,4) = trapz(x,trapz(t,th4,2),1);
 
     % First Order Derivative
     th5 = U.*dA10*S_x;
-    Q(n_lib,5) = trapz(var.x,trapz(var.t,th5,2),1);
+    Q(n_lib,5) = trapz(x,trapz(t,th5,2),1);
 
     % Third Order Derivative
     th6 = U.*dA30*S_x^3;
-    Q(n_lib,6) = trapz(var.x,trapz(var.t,th6,2),1);
+    Q(n_lib,6) = trapz(x,trapz(t,th6,2),1);
 
     % Quadratic Term
     th7 = U.^2.*dA00;
-    Q(n_lib,7) = trapz(var.x,trapz(var.t,th7,2),1);
+    Q(n_lib,7) = trapz(x,trapz(t,th7,2),1);
 
     % Cubic Term
     th8 = U.^3.*dA00;
-    Q(n_lib,8) = trapz(var.x,trapz(var.t,th8,2),1);
+    Q(n_lib,8) = trapz(x,trapz(t,th8,2),1);
 
 end
             
-
-
 %% REGRESSION
 % Parameters
 if if_symreg
@@ -165,87 +162,5 @@ else
     ksi = Q(:,1:3) \ q0;
     res = norm(q0 - Q(1:3)*ksi);
 end
-
-%% REMINDERS
-
-disp(' ')
-disp(' ')
-
-end
-%% --------------------------------------------------------------- SINDy()
-function Xi = SINDy (Theta, dXdt)
-%{
-Compute sparse regression on dX = Theta * Xi
-Regression technique used: sequential least squares
-
-Modified procedure from:
-S. H. Rudy, S. L. Brunton, J. L. Proctor, J. N. Kutz, Data-driven 
-discovery of partial differential equations. Sci. Adv. 3, e1602614 (2017)
-%}
-
-Xi = Theta \ dXdt;
-
-gamma = 0.05;
-lambda = gamma*mean(abs(dXdt)); % threshold to determine term as "small"
-for i = 1:20
-
-  product = zeros(size(Xi)); 
-  [~,w] = size(Theta);
-  for p_ind = 1:w
-    product(p_ind) = Xi(p_ind)*mean(abs(Theta(:,p_ind)));
-  end
-
-  smallinds = (abs(product) < lambda);
-  Xi(smallinds) = 0;                        % set negligible terms to 0
-  for ind = 1:size(dXdt,2)   
-    biginds = ~smallinds(:,ind);
-    Xi(biginds,ind) = Theta(:,biginds) \ dXdt(:,ind);
-  end
-end
     
-end
-%% Assorted functions
-function W = weight_full(k)
-global var
-%{
-Assemble the 1D weight functions into the full weight
-
-k = [kx,ky,kt]: order of derivative(s)
-%}
-
-wx = weight_poly(var.x,4,k(1));
-wt = weight_poly(var.t,3,k(2));
-
-[wT,wX] = meshgrid(wt,wx);
-
-W = wX.*wT;
-
-end
-function p = weight_poly(x,m,k)
-%{
-Polynomial piece of weighting function used to satisfy BC
-
-A = d^k/dx^k[ (x^2 - 1)^m ]
-
-x: independent variable
-m: power of base function
-k: order of derivative
-%}
-
-a = zeros(m*2 + 1,1); % initial coefficent vector
-for l = 0:m
-    a(2*l+1) = (-1)^(m-l)*nchoosek(m,l); % set polynomial coefficients
-end 
-
-c = zeros(2*m+1,1); % final coefficient vector
-for n = 0:(2*m - k)
-    c(n+1) = a(n+1+k)*factorial(n+k)/factorial(n);
-end
-
-p = 0;
-for n = 0:(2*m-k)
-    p = p + c(n+1)*x.^n; % final windowing function
-end
-
-
 end
