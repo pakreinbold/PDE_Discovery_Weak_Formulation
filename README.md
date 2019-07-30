@@ -1,7 +1,7 @@
 # PNAS_Weak_Formulation
- Codes for PNAS Paper: Using Noisy or Incomplete Data to Discover Models of Spatiotemporal Dynamics
+ MATLAB codes for PNAS Paper: Using Noisy or Incomplete Data to Discover Models of Spatiotemporal Dynamics
 
-In Time_Integrators all codes used to generate data sets can be found, and the data set for the Kuramoto-Sivashinsky equation is given directly (in addition to its integrator). References and authorship is attributed both in the codes, as well in the PNAS paper for which this directory was created. Brief instructions for use are given below
+In Time_Integrators all MATLAB codes used to generate data sets can be found, and the data set for the Kuramoto-Sivashinsky equation is given directly (in addition to its integrator). References and authorship is attributed both in the MATLAB codes, as well in the PNAS paper for which this directory was created. Brief instructions for use are given below
 
 KS_Integrator_Trefethen.m : Running this directly should generate the data set in the same directory; some modification to the variable "nplt" on line 31 is necessary for different time resolutions of the stored trajectory.
 
@@ -11,7 +11,7 @@ initialise_sim_params_fdso_np.m : Run this first to create the necessary files r
 
 integrate_2dns_fdso_np.m : Main integrator for the 2D Navier-Stokes equation with Kolmogorov forcing. Running this will create a trajectory in the directory that the initialization code creates. This code is where the length of the trajectory and the temporal sampling rate are determined.
 
-In the other folder, Weak_Formulation_Codes, are the functions used to determine the governing equations for the systems detailed in the paper. The titles indicate for which system the function is intended for. Note that the principle input for these codes is a string containing the filename for the .mat file that contains the trajectory and relevant parameters (usually only dx & dt, the spatial spacing and time between snapshots, respectively). 
+In the other folder, Weak_Formulation_Codes, are the functions used to determine the governing equations for the systems detailed in the paper. The titles indicate for which system the function is intended for. Note that the principle input for these MATLAB codes is a string containing the filename for the .mat file that contains the trajectory and relevant parameters (usually only dx & dt, the spatial spacing and time between snapshots, respectively). 
 
 **Important Note 1**
 The trajectories must be saved with the switch '-v7.3', which enables them to be loaded in pieces with the matfile formalism in MATLAB. This should be handled automatically in the integrators.
