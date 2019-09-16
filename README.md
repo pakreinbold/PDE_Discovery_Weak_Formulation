@@ -1,7 +1,7 @@
-# PNAS_Weak_Formulation
- MATLAB codes for PNAS Paper: Using Noisy or Incomplete Data to Discover Models of Spatiotemporal Dynamics
+# PDE_Discovery_Weak_Formulation
+ MATLAB codes for Paper: Using Noisy or Incomplete Data to Discover Models of Spatiotemporal Dynamics
 
-In Time_Integrators all MATLAB codes used to generate data sets can be found, and the data set for the Kuramoto-Sivashinsky equation is given directly (in addition to its integrator). References and authorship is attributed both in the MATLAB codes, as well in the PNAS paper for which this directory was created. Brief instructions for use are given below
+In Time_Integrators all MATLAB codes used to generate data sets can be found, and the data set for the Kuramoto-Sivashinsky equation is given directly (in addition to its integrator). References and authorship is attributed both in the MATLAB codes, as well in the paper for which this directory was created. Brief instructions for use are given below
 
 KS_Integrator_Trefethen.m : Running this directly should generate the data set in the same directory; some modification to the variable "nplt" on line 31 is necessary for different time resolutions of the stored trajectory.
 
