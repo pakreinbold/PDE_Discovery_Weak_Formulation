@@ -1,7 +1,21 @@
 # PDE_Discovery_Weak_Formulation
- MATLAB codes for Paper: Using Noisy or Incomplete Data to Discover Models of Spatiotemporal Dynamics
+MATLAB codes for papers: 
+##Robust and Optimal Sparse Regression for Nonlinear PDE Models
+References and authorship are attributed both in the MATLAB codes (provided in the Chaos2019 directory), as well in the paper for which this directory was created. Summary of included files below:
 
-In Time_Integrators all MATLAB codes used to generate data sets can be found, and the data set for the Kuramoto-Sivashinsky equation is given directly (in addition to its integrator). References and authorship is attributed both in the MATLAB codes, as well in the paper for which this directory was created. Brief instructions for use are given below
+KS_Integrate.m: Integrator for Kuramoto-Sivashinsky equation by Trefethen.
+
+ParEst_WF_KS.m: Implementation of the weak formulation method for the Kuramoto-Sivashinsky equation.
+
+find_coeffs.m: A general solver for sparse regression from the linear system $\Theta*X = 0$.
+
+weight_full.m: Helper method for generating weight functions and their derivatives.
+
+weight_poly.m: Helper method for generating weight functions' components in 1D. 
+
+##Using Noisy or Incomplete Data to Discover Models of Spatiotemporal Dynamics
+
+In Time_Integrators all MATLAB codes used to generate data sets can be found, and the data set for the Kuramoto-Sivashinsky equation is given directly (in addition to its integrator). References and authorship are attributed both in the MATLAB codes, as well in the paper for which this directory was created. Brief instructions for use are given below:
 
 KS_Integrator_Trefethen.m : Running this directly should generate the data set in the same directory; some modification to the variable "nplt" on line 31 is necessary for different time resolutions of the stored trajectory.
 
